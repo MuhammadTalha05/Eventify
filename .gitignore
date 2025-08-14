@@ -1,0 +1,26 @@
+# Ignore node_modules in all subfolders
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Ignore environment variables
+.env
+client/.env
+server/.env
+
+# Ignore log files
+*.log
+client/*.log
+server/*.log
+
+# Ignore build outputs
+client/.next/
+server/dist/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Optional: IDE/editor settings
+.vscode/
+.idea/
