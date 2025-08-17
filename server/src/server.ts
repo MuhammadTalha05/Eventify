@@ -1,10 +1,23 @@
-// src/server.ts
-import express, { Request, Response } from 'express';
+import express from "express";
+import dotenv from "dotenv";
+import morgan from "morgan"; 
+import cors from "cors";
+import authRoutes from "./routes/auth.routes";
+import errorHandler from "./middlewares/errorHandler.middleware";
+
+dotenv.config();
 
 const app = express();
-const PORT = 5000;
+app.use(express.json());
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+app.use(cors());
+
+app.use(morgan("dev"));
+
+// Auth Route
+app.use("/api/auth", authRoutes);
+
+app.use(errorHandler);
+
+const port = Number(process.env.PORT ?? 4000);
+app.listen(port, () => console.log(`Server listening on ${port}`));
