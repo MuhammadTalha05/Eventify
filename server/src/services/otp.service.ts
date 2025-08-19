@@ -7,7 +7,7 @@ const OTP_TTL_MINUTES = Number(process.env.OTP_TTL_MINUTES ?? 10);
 // Create OTP And Send On Email
 export async function createAndSendOtp(
   userId: string,
-  purpose: "LOGIN" | "PASSWORD_RESET"
+  purpose: "LOGIN"
 ) {
   // 1. Invalidate all old OTPs for this user & purpose
   await prisma.otpRequest.updateMany({
@@ -43,7 +43,7 @@ export async function createAndSendOtp(
   await sendOtpEmail(
     user.email,
     otp,
-    purpose === "PASSWORD_RESET" ? "password_reset" : purpose.toLowerCase(),
+    purpose.toLocaleLowerCase(),
     OTP_TTL_MINUTES
   );
 
@@ -55,7 +55,7 @@ export async function createAndSendOtp(
 export async function verifyOtp(
   userId: string,
   otpCode: string,
-  purpose: "LOGIN" | "PASSWORD_RESET"
+  purpose: "LOGIN"
 ) {
   const otpRecord = await prisma.otpRequest.findFirst({
     where: {
@@ -63,7 +63,7 @@ export async function verifyOtp(
       otpCode: otpCode,
       purpose,
       used: false,
-      expiresAt: { gt: new Date() },
+      expiresAt: { gte: new Date() },
     },
     orderBy: { createdAt: "desc" as const },
   });

@@ -11,7 +11,7 @@ CREATE TYPE "eventStatus" AS ENUM ('DRAFT', 'ACTIVE', 'ENDED', 'CANCELLED');
 CREATE TYPE "participantStatus" AS ENUM ('PENDING', 'CONFIRMED', 'REJECTED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "otpPurpose" AS ENUM ('LOGIN', 'PASSWORD_RESET');
+CREATE TYPE "otpPurpose" AS ENUM ('LOGIN');
 
 -- CreateTable
 CREATE TABLE "user" (

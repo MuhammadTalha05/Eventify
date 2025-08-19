@@ -44,8 +44,7 @@ export async function signin(req: AuthRequest, res: Response) {
   }
 }
 
-
-// LOGIN STEP 2: verify login OTP -> return tokens
+// Verfiy Login
 export async function verifyLogin(req: Request, res: Response) {
   try {
     const { email, otp } = req.body;
@@ -54,53 +53,69 @@ export async function verifyLogin(req: Request, res: Response) {
       return res.status(400).json({ error: "Email and OTP are required" });
     }
 
-    const result = await authService.verifyLoginOtp(email, otp);
-    res.json(result); // { user, accessToken, refreshToken }
+    const { user, accessToken, refreshToken } = await authService.verifyLoginOtp(email, otp);
+
+    // Set cookies
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000, // 15 min
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return res.json({
+      message: "Login successful",
+      user,
+    });
   } catch (err: unknown) {
-    if (err instanceof Error) return res.status(400).json({ error: err.message });
-    return res.status(400).json({ error: "An unknown error occurred" });
+    return res.status(400).json({
+      error: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 }
 
 
-// Reset Password Request Controller
-export async function resetPasswword(req: Request, res: Response) {
+// Request password reset (send email)
+export async function resetPassword(req: Request, res: Response) {
   try {
     const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ error: "Email is required" });
-    }
+    if (!email) return res.status(400).json({ error: "Email is required" });
 
     const result = await authService.requestPasswordReset(email);
     res.json(result);
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      res.status(400).json({ error: err.message });
-    } else {
-      res.status(400).json({ error: "An unknown error occurred" });
-    }
+    res.status(400).json({
+      error: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 }
 
 
-// Reset Passowrd Controller
+// Verify reset token and set new password
 export async function verifyReset(req: Request, res: Response) {
   try {
-    const { email, otp, newPassword } = req.body;
+    const token = req.query.token as string;
+    const { newPassword, confirmPassword } = req.body;
 
-    if (!email) return res.status(400).json({ error: "Email is required" });
-    if (!otp) return res.status(400).json({ error: "OTP is required" });
+    if (!token) return res.status(400).json({ error: "Token is required in URL" });
     if (!newPassword) return res.status(400).json({ error: "New password is required" });
+    if (!confirmPassword) return res.status(400).json({ error: "Confirm password is required" });
+    if (newPassword !== confirmPassword)
+      return res.status(400).json({ error: "Passwords do not match" });
 
-    const result = await authService.resetPassword(email, otp, newPassword);
+    const result = await authService.resetPassword(token, newPassword);
     res.json(result);
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      res.status(400).json({ error: err.message });
-    } else {
-      res.status(400).json({ error: "An unknown error occurred" });
-    }
+    res.status(400).json({
+      error: err instanceof Error ? err.message : "An unknown error occurred",
+    });
   }
 }
 
@@ -108,16 +123,33 @@ export async function verifyReset(req: Request, res: Response) {
 // Refreshing Access Token Controller
 export async function refreshAccessToken(req: Request, res: Response) {
   try {
-    const { refreshToken } = req.body;
-    if (!refreshToken) return res.status(400).json({ error: "Refresh token is required" });
+    const refreshToken = req.cookies?.refreshToken;
+    if (!refreshToken) {
+      return res.status(401).json({ error: "Refresh token missing" });
+    }
 
-    const result = await authService.refreshAccessToken(refreshToken);
-    res.json(result);
+    const { accessToken, refreshToken: newRefreshToken } = await authService.refreshAccessToken(refreshToken);
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000, // 15 min
+    });
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return res.json({ message: "Tokens refreshed successfully" });
   } catch (err: unknown) {
     if (err instanceof Error) {
-      res.status(400).json({ error: err.message });
+      return res.status(401).json({ error: err.message });
     } else {
-      res.status(400).json({ error: "An unknown error occurred" });
+      return res.status(401).json({ error: "An unknown error occurred" });
     }
   }
 }
@@ -129,6 +161,19 @@ export async function logout(req: AuthRequest, res: Response) {
     if (!req.user) return res.status(401).json({ error: "Unauthorized" });
 
     const { fullName } = await authService.logout(req.user.sub);
+
+    // Clear cookies
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    });
 
     res.json({ message: `${fullName} successfully logged out` });
   } catch (err: unknown) {

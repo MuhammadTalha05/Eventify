@@ -13,7 +13,7 @@ router.post("/signin", ctrl.signin);
 router.post("/login/verify", ctrl.verifyLogin);
 
 // Reset Password and Verify Password
-router.post("/password/reset", ctrl.resetPasswword);
+router.post("/password/reset", ctrl.resetPassword);
 router.post("/password/verify", ctrl.verifyReset);
 
 

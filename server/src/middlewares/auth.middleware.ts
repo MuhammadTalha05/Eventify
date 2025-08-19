@@ -6,16 +6,32 @@ export interface AuthRequest extends Request {
 }
 
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
-  const h = req.headers.authorization;
-  if (!h || !h.startsWith("Bearer ")) 
-    return res.status(401).json({ error: "Unauthorized" });
+  const token = req.cookies?.accessToken;
 
-  const token = h.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   try {
     const payload = verifyAccessToken<{ sub: string; role?: string }>(token);
     req.user = payload;
     next();
-  } catch (e) {
+  } catch {
     return res.status(401).json({ error: "Invalid or expired token" });
   }
+}
+
+
+// Role-based authorization middleware
+export function requireRole(...allowedRoles: string[]) {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!req.user.role || !allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ error: "Forbidden: Only Amdins are allowed" });
+    }
+    next();
+  };
 }

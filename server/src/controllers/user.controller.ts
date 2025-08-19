@@ -1,0 +1,136 @@
+import { Response } from "express";
+import * as userService from "../services/user.service";
+import { AuthRequest } from "../middlewares/auth.middleware";
+
+// Get profile (self or by id if admin)
+export async function getProfileController(req: AuthRequest, res: Response) {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+    const {id} = req.params;
+
+    if (!id) {
+      const profile = await userService.getUserProfile(req.user.sub);
+      return res.json(profile);
+    }
+
+    if (id !== req.user.sub && req.user.role !== "ADMIN") {
+      return res.status(403).json({ error: "Forbidden: You can only view your own profile" });
+    }
+
+    const profile = await userService.getUserProfile(id);
+    res.json(profile);
+  } catch (err: unknown) {
+    return res.status(400).json({
+      error: err instanceof Error ? err.message : "An unknown error occurred",
+    });
+  }
+}
+
+// Update user by query param id
+export async function updateProfileController(req: AuthRequest, res: Response) {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+    const {id} = req.params;
+
+    if (id !== req.user.sub) {
+      return res.status(403).json({ error: "Forbidden: You can only update your own profile" });
+    }
+
+    const { fullName, phone } = req.body;
+
+    let avatarUrl: string | undefined;
+    if (req.file) {
+      const file = req.file as Express.Multer.File;
+      avatarUrl = file.path; 
+    }
+
+    const updatedUser = await userService.updateUserProfile(req.user.sub, {
+      fullName,
+      phone,
+      avatarUrl,
+    });
+
+    res.json(updatedUser);
+  } catch (err: unknown) {
+    return res.status(400).json({
+      error: err instanceof Error ? err.message : "An unknown error occurred",
+    });
+  }
+}
+
+
+// Admin: Get all users (excluding the requesting admin)
+export async function getAllUsersController(req: AuthRequest, res: Response) {
+  try {
+    if (!req.user || req.user.role !== "ADMIN") {
+      return res.status(403).json({ 
+        error: "Access denied. Only administrators can view all users." 
+      });
+    }
+
+    const users = await userService.getAllUsers(req.user.sub);
+    return res.json(users);
+  } catch (err: unknown) {
+    return res.status(500).json({
+      error: err instanceof Error ? err.message : "Something went wrong. Please try again later.",
+    });
+  }
+}
+
+// Chnage User ROle
+export async function changeUserRoleController(req: AuthRequest, res: Response) {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+    if (req.user.role !== "ADMIN") {
+      return res.status(403).json({ 
+        error: "Access denied. Only administrators can update user roles." 
+      });
+    }
+
+    const { id, role } = req.body;
+
+    if (!id || !role) {
+      return res.status(400).json({ error: "id and role are required" });
+    }
+
+    if (!["ADMIN", "PARTICIPANT"].includes(role)) {
+      return res.status(400).json({ error: "Role must be either ADMIN or PARTICIPANT" });
+    }
+
+    const updatedUser = await userService.changeUserRole(id, role as "ADMIN" | "PARTICIPANT");
+    res.json({ message: "Role updated successfully", user: updatedUser });
+  } catch (err: unknown) {
+    return res.status(400).json({
+      error: err instanceof Error ? err.message : "An unknown error occurred",
+    });
+  }
+}
+
+// Update User Password
+export async function updatePasswordController(req: AuthRequest, res: Response) {
+  try {
+    if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+    const { id } = req.params;
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ error: "Both old and new passwords are required" });
+    }
+
+    if (req.user.sub !== id) {
+      return res.status(403).json({ error: "You can only change your own password" });
+    }
+
+    await userService.updateUserPassword(id, oldPassword, newPassword);
+
+    return res.json({ message: "Password updated successfully" });
+  } catch (err: unknown) {
+    return res.status(400).json({
+      error: err instanceof Error ? err.message : "Something went wrong, please try again",
+    });
+  }
+}

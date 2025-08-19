@@ -33,7 +33,6 @@ enum participantStatus {
 
 enum otpPurpose {
   LOGIN
-  PASSWORD_RESET
 }
 
 model user {
