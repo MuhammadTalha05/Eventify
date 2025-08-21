@@ -5,7 +5,7 @@ import { AuthRequest } from "../middlewares/auth.middleware";
 // Get profile (self or by id if admin)
 export async function getProfileController(req: AuthRequest, res: Response) {
   try {
-    if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+    if (!req.user) return res.status(401).json({success: false, error: "Unauthorized" });
 
     const {id} = req.params;
 
@@ -15,13 +15,14 @@ export async function getProfileController(req: AuthRequest, res: Response) {
     }
 
     if (id !== req.user.sub && req.user.role !== "ADMIN") {
-      return res.status(403).json({ error: "Forbidden: You can only view your own profile" });
+      return res.status(403).json({success: false, error: "Forbidden: You can only view your own profile" });
     }
 
     const profile = await userService.getUserProfile(id);
     res.json(profile);
   } catch (err: unknown) {
     return res.status(400).json({
+      success: false,
       error: err instanceof Error ? err.message : "An unknown error occurred",
     });
   }
@@ -30,12 +31,12 @@ export async function getProfileController(req: AuthRequest, res: Response) {
 // Update user by query param id
 export async function updateProfileController(req: AuthRequest, res: Response) {
   try {
-    if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+    if (!req.user) return res.status(401).json({success: false, error: "Unauthorized" });
 
     const {id} = req.params;
 
     if (id !== req.user.sub) {
-      return res.status(403).json({ error: "Forbidden: You can only update your own profile" });
+      return res.status(403).json({success: false, error: "Forbidden: You can only update your own profile" });
     }
 
     const { fullName, phone } = req.body;
@@ -55,23 +56,32 @@ export async function updateProfileController(req: AuthRequest, res: Response) {
     res.json(updatedUser);
   } catch (err: unknown) {
     return res.status(400).json({
+      success: false,
       error: err instanceof Error ? err.message : "An unknown error occurred",
     });
   }
 }
 
-
 // Admin: Get all users (excluding the requesting admin)
 export async function getAllUsersController(req: AuthRequest, res: Response) {
   try {
     if (!req.user || req.user.role !== "ADMIN") {
-      return res.status(403).json({ 
-        error: "Access denied. Only administrators can view all users." 
+      return res.status(403).json({
+        success: false,
+        error: "Access denied. Only administrators can view all users.",
       });
     }
 
-    const users = await userService.getAllUsers(req.user.sub);
-    return res.json(users);
+    const page = Number(req.query.page) || 1;
+    const search = (req.query.search as string) || undefined;
+
+    const result = await userService.getAllUsers(req.user.sub, { page, search });
+
+    return res.status(200).json({
+      success: true,
+      pagination: result.pagination,
+      data: result.data,
+    });
   } catch (err: unknown) {
     return res.status(500).json({
       error: err instanceof Error ? err.message : "Something went wrong. Please try again later.",
@@ -86,6 +96,7 @@ export async function changeUserRoleController(req: AuthRequest, res: Response) 
 
     if (req.user.role !== "ADMIN") {
       return res.status(403).json({ 
+        success: false,
         error: "Access denied. Only administrators can update user roles." 
       });
     }
@@ -93,17 +104,18 @@ export async function changeUserRoleController(req: AuthRequest, res: Response) 
     const { id, role } = req.body;
 
     if (!id || !role) {
-      return res.status(400).json({ error: "id and role are required" });
+      return res.status(400).json({success: false, error: "id and role are required" });
     }
 
     if (!["ADMIN", "PARTICIPANT"].includes(role)) {
-      return res.status(400).json({ error: "Role must be either ADMIN or PARTICIPANT" });
+      return res.status(400).json({success: false, error: "Role must be either ADMIN or PARTICIPANT" });
     }
 
     const updatedUser = await userService.changeUserRole(id, role as "ADMIN" | "PARTICIPANT");
-    res.json({ message: "Role updated successfully", user: updatedUser });
+    res.json({success: true, message: "Role updated successfully", user: updatedUser });
   } catch (err: unknown) {
     return res.status(400).json({
+      success: false,
       error: err instanceof Error ? err.message : "An unknown error occurred",
     });
   }
@@ -112,24 +124,25 @@ export async function changeUserRoleController(req: AuthRequest, res: Response) 
 // Update User Password
 export async function updatePasswordController(req: AuthRequest, res: Response) {
   try {
-    if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+    if (!req.user) return res.status(401).json({success: false, error: "Unauthorized" });
 
     const { id } = req.params;
     const { oldPassword, newPassword } = req.body;
 
     if (!oldPassword || !newPassword) {
-      return res.status(400).json({ error: "Both old and new passwords are required" });
+      return res.status(400).json({success: false, error: "Both old and new passwords are required" });
     }
 
     if (req.user.sub !== id) {
-      return res.status(403).json({ error: "You can only change your own password" });
+      return res.status(403).json({success: false, error: "You can only change your own password" });
     }
 
     await userService.updateUserPassword(id, oldPassword, newPassword);
 
-    return res.json({ message: "Password updated successfully" });
+    return res.json({success: true, message: "Password updated successfully" });
   } catch (err: unknown) {
     return res.status(400).json({
+      success: false,
       error: err instanceof Error ? err.message : "Something went wrong, please try again",
     });
   }

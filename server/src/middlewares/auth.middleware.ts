@@ -9,7 +9,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   const token = req.cookies?.accessToken;
 
   if (!token) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({success: false, error: "Unauthorized" });
   }
 
   try {
@@ -17,7 +17,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
     req.user = payload;
     next();
   } catch {
-    return res.status(401).json({ error: "Invalid or expired token" });
+    return res.status(401).json({success: false, error: "Invalid or expired token" });
   }
 }
 
@@ -26,11 +26,11 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 export function requireRole(...allowedRoles: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({success: false, error: "Unauthorized" });
     }
 
     if (!req.user.role || !allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ error: "Forbidden: Only Amdins are allowed" });
+      return res.status(403).json({success: false, error: "Forbidden: Only Amdins are allowed" });
     }
     next();
   };

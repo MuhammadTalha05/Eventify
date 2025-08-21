@@ -31,6 +31,7 @@ export async function signup(fullName: string, email: string, phone: string, pas
   });
 
   return { 
+    success: true,
     message: "Signup successful. You can now log in.", 
     userId: newUser.id 
   };
@@ -52,7 +53,7 @@ export async function signinWithPassword(email: string, password: string) {
 
   await otpService.createAndSendOtp(user.id, "LOGIN");
 
-  return { message: "OTP sent to your email. Please verify to complete login." };
+  return {success: true, message: "OTP sent to your email. Please verify to complete login." };
 }
 
 
@@ -78,6 +79,7 @@ export async function verifyLoginOtp(email: string, otpCode: string) {
   });
 
   return {
+    success: true,
     message: "Login successful",
     user: {
       id: user.id,
@@ -89,43 +91,6 @@ export async function verifyLoginOtp(email: string, otpCode: string) {
     refreshToken,  
   };
 }
-
-
-// // Request Reset Password Auth Service
-// export async function requestPasswordReset(email: string) {
-//   // Validation
-//   if (!isEmail(email)) throw new Error("Invalid email format");
-
-//   const user = await prisma.user.findUnique({ where: { email } });
-//   if (!user) throw new Error("User not found");
-
-//   await otpService.createAndSendOtp(user.id, "PASSWORD_RESET");
-//   return { message: "Password reset OTP sent to email" };
-// }
-
-
-// // Reset Password Auth Service
-// export async function resetPassword(email: string, otpCode: string, newPassword: string) {
-
-//   // Validation
-//   if (!isEmail(email)) throw new Error("Invalid email format");
-//   if (!isStrongPassword(newPassword)) throw new Error("Password must be at least 8 chars and contain letters and numbers");
-
-//   const user = await prisma.user.findUnique({ where: { email } });
-//   if (!user) throw new Error("User not found");
-
-//   await otpService.verifyOtp(user.id, otpCode, "PASSWORD_RESET");
-
-//   const hashedPassword = await hashPassword(newPassword);
-
-//   await prisma.user.update({
-//     where: { id: user.id },
-//     data: { passwordHash: hashedPassword },
-//   });
-
-//   return { message: "Password reset successful" };
-// }
-
 
 // Request Reset Password Auth Service
 export async function requestPasswordReset(email: string) {
@@ -148,7 +113,7 @@ export async function requestPasswordReset(email: string) {
     `<p>Click <a href="${resetLink}">here</a> to reset your password.</p>`
   );
 
-  return { message: "Password reset link sent to email" };
+  return {success: true, message: "Password reset link sent to email" };
 }
 
 
@@ -170,7 +135,7 @@ export async function resetPassword(token: string, newPassword: string) {
     data: { passwordHash: hashedPassword },
   });
 
-  return { message: "Password reset successful" };
+  return {success: true, message: "Password reset successful" };
 }
 
 

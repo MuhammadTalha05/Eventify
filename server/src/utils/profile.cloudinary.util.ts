@@ -3,8 +3,6 @@ import cloudinary from "../config/cloudinary.config";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import multer from "multer";
 
-
-// ✅ Use CloudinaryStorage options correctly
 const storage = new CloudinaryStorage({
     cloudinary,
     params: async () => ({

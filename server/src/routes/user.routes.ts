@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as ctrl from "../controllers/user.controller";
 import { requireAuth, requireRole } from "../middlewares/auth.middleware";
-import { upload } from "../utils/cloudinary.util";
+import { upload } from "../utils/profile.cloudinary.util";
 
 const router = Router();
 

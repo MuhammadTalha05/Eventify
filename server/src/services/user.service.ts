@@ -1,6 +1,7 @@
 import prisma from "../config/db.config";
 import { isPhoneNumber, isStrongPassword } from "../utils/validation.util";
 import { hashPassword, comparePassword } from "../utils/hash.util";
+import { GetAllOptions } from "../types/event.type";
 
 // Get single user profile by ID
 export async function getUserProfile(userId: string) {
@@ -52,10 +53,34 @@ export async function updateUserProfile(
 }
 
 // Get All User For Admins
-export async function getAllUsers(adminId: string) {
-  return prisma.user.findMany({
+export async function getAllUsers(adminId: string, options: GetAllOptions = {}) {
+  const page = options.page && options.page > 0 ? options.page : 1;
+  const limit = 9; // fixed per page
+  const skip = (page - 1) * limit;
+
+  // Build search filter
+  const searchFilter = options.search
+    ? {
+        OR: [
+          { fullName: { contains: options.search, mode: "insensitive" as const } },
+          { email: { contains: options.search, mode: "insensitive" as const } },
+        ],
+      }
+    : {};
+
+  // Total count of users
+  const totalCount = await prisma.user.count({
     where: {
       NOT: { id: adminId },
+      ...searchFilter,
+    },
+  });
+
+  // Fetch paginated users
+  const users = await prisma.user.findMany({
+    where: {
+      NOT: { id: adminId },
+      ...searchFilter,
     },
     select: {
       id: true,
@@ -65,9 +90,24 @@ export async function getAllUsers(adminId: string) {
       role: true,
       createdAt: true,
     },
+    orderBy: { createdAt: "desc" },
+    skip,
+    take: limit,
   });
-}
 
+  const totalPages = Math.ceil(totalCount / limit);
+
+  return {
+    pagination: {
+      totalItems: totalCount,
+      totalPages,
+      currentPage: page,
+      perPage: limit,
+      currentCount: users.length,
+    },
+    data: users,
+  };
+}
 
 // Change user role (Admin only)
 export async function changeUserRole(userId: string, newRole: "ADMIN" | "PARTICIPANT") {
@@ -88,7 +128,7 @@ export async function changeUserRole(userId: string, newRole: "ADMIN" | "PARTICI
 }
 
 
-// Updat User Password
+// Update User Password
 export async function updateUserPassword(
   userId: string,
   oldPassword: string,

@@ -9,15 +9,15 @@ export async function signup(req: Request, res: Response) {
     const { fullName, email, phone, password, role  } = req.body;
 
     if (!fullName || !email || !phone || !password) {
-      return res.status(400).json({ error: "Full Name, Email, Phone, Password are reuqired" });
+      return res.status(400).json({success: false, error: "Full Name, Email, Phone, Password are reuqired" });
     }
     const result = await authService.signup(fullName, email, phone, password,role);
     res.json(result);
   } catch (err: unknown) {
     if (err instanceof Error) {
-      res.status(400).json({ error: err.message });
+      res.status(400).json({success: false, error: err.message });
     } else {
-      res.status(400).json({ error: "An unknown error occurred" });
+      res.status(400).json({success: false, error: "An unknown error occurred" });
     }
   }
 }
@@ -29,7 +29,7 @@ export async function signin(req: AuthRequest, res: Response) {
    const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
+      return res.status(400).json({success: false, error: "Email and password are required" });
     }
     // authenticate user via service
     const result = await authService.signinWithPassword(email, password);
@@ -37,9 +37,9 @@ export async function signin(req: AuthRequest, res: Response) {
 
   } catch (err: unknown) {
     if (err instanceof Error) {
-      res.status(400).json({ error: err.message });
+      res.status(400).json({success: false, error: err.message });
     } else {
-      res.status(400).json({ error: "An unknown error occurred" });
+      res.status(400).json({success: false, error: "An unknown error occurred" });
     }
   }
 }
@@ -50,7 +50,7 @@ export async function verifyLogin(req: Request, res: Response) {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-      return res.status(400).json({ error: "Email and OTP are required" });
+      return res.status(400).json({success: false, error: "Email and OTP are required" });
     }
 
     const { user, accessToken, refreshToken } = await authService.verifyLoginOtp(email, otp);
@@ -71,11 +71,13 @@ export async function verifyLogin(req: Request, res: Response) {
     });
 
     return res.json({
+      success: true,
       message: "Login successful",
       user,
     });
   } catch (err: unknown) {
     return res.status(400).json({
+      success: false,
       error: err instanceof Error ? err.message : "An unknown error occurred",
     });
   }
@@ -86,12 +88,13 @@ export async function verifyLogin(req: Request, res: Response) {
 export async function resetPassword(req: Request, res: Response) {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ error: "Email is required" });
+    if (!email) return res.status(400).json({success: false, error: "Email is required" });
 
     const result = await authService.requestPasswordReset(email);
     res.json(result);
   } catch (err: unknown) {
     res.status(400).json({
+      success: false,
       error: err instanceof Error ? err.message : "An unknown error occurred",
     });
   }
@@ -104,16 +107,17 @@ export async function verifyReset(req: Request, res: Response) {
     const token = req.query.token as string;
     const { newPassword, confirmPassword } = req.body;
 
-    if (!token) return res.status(400).json({ error: "Token is required in URL" });
-    if (!newPassword) return res.status(400).json({ error: "New password is required" });
-    if (!confirmPassword) return res.status(400).json({ error: "Confirm password is required" });
+    if (!token) return res.status(400).json({success: false, error: "Token is required in URL" });
+    if (!newPassword) return res.status(400).json({success: false, error: "New password is required" });
+    if (!confirmPassword) return res.status(400).json({success: false, error: "Confirm password is required" });
     if (newPassword !== confirmPassword)
-      return res.status(400).json({ error: "Passwords do not match" });
+      return res.status(400).json({success: false, error: "Passwords do not match" });
 
     const result = await authService.resetPassword(token, newPassword);
     res.json(result);
   } catch (err: unknown) {
     res.status(400).json({
+      success: false,
       error: err instanceof Error ? err.message : "An unknown error occurred",
     });
   }
@@ -125,7 +129,7 @@ export async function refreshAccessToken(req: Request, res: Response) {
   try {
     const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) {
-      return res.status(401).json({ error: "Refresh token missing" });
+      return res.status(401).json({success: false, error: "Refresh token missing" });
     }
 
     const { accessToken, refreshToken: newRefreshToken } = await authService.refreshAccessToken(refreshToken);
@@ -144,12 +148,12 @@ export async function refreshAccessToken(req: Request, res: Response) {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    return res.json({ message: "Tokens refreshed successfully" });
+    return res.json({success:true, message: "Tokens refreshed successfully" });
   } catch (err: unknown) {
     if (err instanceof Error) {
-      return res.status(401).json({ error: err.message });
+      return res.status(401).json({success: false, error: err.message });
     } else {
-      return res.status(401).json({ error: "An unknown error occurred" });
+      return res.status(401).json({success: false, error: "An unknown error occurred" });
     }
   }
 }
@@ -175,12 +179,12 @@ export async function logout(req: AuthRequest, res: Response) {
       sameSite: "strict",
     });
 
-    res.json({ message: `${fullName} successfully logged out` });
+    res.json({success:true, message: `${fullName} successfully logged out` });
   } catch (err: unknown) {
     if (err instanceof Error) {
-      res.status(400).json({ error: err.message });
+      res.status(400).json({success: false, error: err.message });
     } else {
-      res.status(400).json({ error: "An unknown error occurred" });
+      res.status(400).json({success: false, error: "An unknown error occurred" });
     }
   }
 }
