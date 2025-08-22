@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "userRole" AS ENUM ('ORGANIZER', 'PARTICIPANT');
+CREATE TYPE "userRole" AS ENUM ('SUPER_ADMIN', 'ORGANIZER', 'PARTICIPANT');
 
 -- CreateEnum
 CREATE TYPE "eventType" AS ENUM ('ONSITE', 'ONLINE');
