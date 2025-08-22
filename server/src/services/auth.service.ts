@@ -6,6 +6,8 @@ import { signAccessToken, signRefreshToken , verifyRefreshToken, verifyPasswordR
 import { sendEmail } from "../utils/email.util";
 
 
+type UserRole = "SUPER_ADMIN" | "ORGANIZER" | "PARTICIPANT";
+
 // Signup Request Auth Service
 export async function signup(fullName: string, email: string, phone: string, password: string, role?: string) {
   // Validation Handling
@@ -18,7 +20,11 @@ export async function signup(fullName: string, email: string, phone: string, pas
 
   const hashedPassword = await hashPassword(password);
 
-  const userRole = role === "ORGANIZER" ? "ORGANIZER" : "PARTICIPANT";
+  // ✅ Assign role (default PARTICIPANT)
+  let userAssignedRole: UserRole = "PARTICIPANT";
+  if (role && ["SUPER_ADMIN", "ORGANIZER", "PARTICIPANT"].includes(role)) {
+    userAssignedRole = role as UserRole;
+  }
 
   const newUser = await prisma.user.create({
     data: {
@@ -26,14 +32,15 @@ export async function signup(fullName: string, email: string, phone: string, pas
       email,
       phone,
       passwordHash: hashedPassword,
-      role: userRole,
+      role: userAssignedRole,
     },
   });
 
   return { 
     success: true,
     message: "Signup successful. You can now log in.", 
-    userId: newUser.id 
+    userId: newUser.id,
+    role: newUser.role
   };
 }
 

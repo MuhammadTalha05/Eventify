@@ -65,10 +65,10 @@ export async function updateProfileController(req: AuthRequest, res: Response) {
 // ORGANIZER: Get all users (excluding the requesting ORGANIZER)
 export async function getAllUsersController(req: AuthRequest, res: Response) {
   try {
-    if (!req.user || req.user.role !== "ORGANIZER") {
+    if (!req.user || req.user.role !== "SUPER_ADMIN") {
       return res.status(403).json({
         success: false,
-        error: "Access denied. Only organizers can view all users.",
+        error: "Access denied. Only super admin can view all users.",
       });
     }
 
@@ -94,10 +94,10 @@ export async function changeUserRoleController(req: AuthRequest, res: Response) 
   try {
     if (!req.user) return res.status(401).json({ error: "Unauthorized" });
 
-    if (req.user.role !== "ORGANIZER") {
+    if (req.user.role !== "SUPER_ADMIN") {
       return res.status(403).json({ 
         success: false,
-        error: "Access denied. Only organizers can update user roles." 
+        error: "Access denied. Only super admins can update user roles." 
       });
     }
 

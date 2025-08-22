@@ -15,10 +15,10 @@ router.put("/profile/:id", requireAuth, upload.single("avatarUrl"), ctrl.updateP
 router.put("/profile/:id/password", requireAuth, ctrl.updatePasswordController);
 
 // ORGANIZER only: Get all users
-router.get("/all", requireAuth, requireRole("ORGANIZER"), ctrl.getAllUsersController);
+router.get("/all", requireAuth, requireRole("SUPER_ADMIN"), ctrl.getAllUsersController);
 
 // Chnage User Role
-router.patch("/profile/role", requireAuth, requireRole("ORGANIZER"), ctrl.changeUserRoleController);
+router.patch("/profile/role", requireAuth, requireRole("SUPER_ADMIN"), ctrl.changeUserRoleController);
 
 
 export default router;

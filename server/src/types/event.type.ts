@@ -21,3 +21,4 @@ export interface GetAllOptions {
   limit?: number;  
   search?: string; 
 }
+

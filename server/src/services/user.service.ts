@@ -52,8 +52,8 @@ export async function updateUserProfile(
   return user;
 }
 
-// Get All User For ORGANIZER
-export async function getAllUsers(organizerId: string, options: GetAllOptions = {}) {
+// Get All User For SUPER_ADMIN
+export async function getAllUsers(superAdminId: string, options: GetAllOptions = {}) {
   const page = options.page && options.page > 0 ? options.page : 1;
   const limit = 9; // fixed per page
   const skip = (page - 1) * limit;
@@ -71,7 +71,7 @@ export async function getAllUsers(organizerId: string, options: GetAllOptions = 
   // Total count of users
   const totalCount = await prisma.user.count({
     where: {
-      NOT: { id: organizerId },
+      NOT: { id: superAdminId },
       ...searchFilter,
     },
   });
@@ -79,7 +79,7 @@ export async function getAllUsers(organizerId: string, options: GetAllOptions = 
   // Fetch paginated users
   const users = await prisma.user.findMany({
     where: {
-      NOT: { id: organizerId },
+      NOT: { id: superAdminId },
       ...searchFilter,
     },
     select: {
@@ -109,7 +109,7 @@ export async function getAllUsers(organizerId: string, options: GetAllOptions = 
   };
 }
 
-// Change user role (ORGANIZER only)
+// Change user role (SUPER_ADMIN only)
 export async function changeUserRole(userId: string, newRole: "ORGANIZER" | "PARTICIPANT") {
   const user = await prisma.user.update({
     where: { id: userId },
