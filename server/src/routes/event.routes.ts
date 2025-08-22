@@ -6,22 +6,22 @@ import { uploadEventMedia } from "../utils/event.cloudinary.util";
 const router = Router();
 
 // Create Event
-router.post("/create", requireAuth, requireRole("ADMIN"), uploadEventMedia , ctrl.createEventController);
+router.post("/create", requireAuth, requireRole("ORGANIZER"), uploadEventMedia , ctrl.createEventController);
 
 // Update Event
-router.put("/update/:id", requireAuth, requireRole("ADMIN"), uploadEventMedia , ctrl.updateEventController);
+router.put("/update/:id", requireAuth, requireRole("ORGANIZER"), uploadEventMedia , ctrl.updateEventController);
 
 // Update Event Status
-router.put("/status/:id", requireAuth, requireRole("ADMIN"), ctrl.updateEventStatusController);
+router.put("/status/:id", requireAuth, requireRole("ORGANIZER"), ctrl.updateEventStatusController);
 
 // Delete Event
-router.delete("/delete/:id", requireAuth, requireRole("ADMIN") , ctrl.deleteEventController);
+router.delete("/delete/:id", requireAuth, requireRole("ORGANIZER") , ctrl.deleteEventController);
 
 // Delete a specific attachment by ID (attachmentId in params)
-router.delete("/delete/attachment/:id", requireAuth, requireRole("ADMIN"), ctrl.deleteEventAttachmentController);
+router.delete("/delete/attachment/:id", requireAuth, requireRole("ORGANIZER"), ctrl.deleteEventAttachmentController);
 
 // Get My Events
-router.get("/all/me", requireAuth, requireRole("ADMIN") , ctrl.getMyEventsController);
+router.get("/all/me", requireAuth, requireRole("ORGANIZER") , ctrl.getMyEventsController);
 
 // Get All Events
 router.get("/all", ctrl.getAllEventsController);

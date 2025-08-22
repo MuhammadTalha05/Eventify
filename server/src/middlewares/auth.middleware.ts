@@ -30,7 +30,7 @@ export function requireRole(...allowedRoles: string[]) {
     }
 
     if (!req.user.role || !allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({success: false, error: "Forbidden: Only Amdins are allowed" });
+      return res.status(403).json({success: false, error: "Forbidden: Only ORGANIZER are allowed" });
     }
     next();
   };

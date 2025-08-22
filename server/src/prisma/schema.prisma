@@ -8,7 +8,7 @@ datasource db {
 }
 
 enum userRole {
-  ADMIN
+  ORGANIZER
   PARTICIPANT
 }
 

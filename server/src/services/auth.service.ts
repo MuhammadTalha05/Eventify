@@ -18,7 +18,7 @@ export async function signup(fullName: string, email: string, phone: string, pas
 
   const hashedPassword = await hashPassword(password);
 
-  const userRole = role === "ADMIN" ? "ADMIN" : "PARTICIPANT";
+  const userRole = role === "ORGANIZER" ? "ORGANIZER" : "PARTICIPANT";
 
   const newUser = await prisma.user.create({
     data: {

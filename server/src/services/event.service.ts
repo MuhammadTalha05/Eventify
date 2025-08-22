@@ -6,7 +6,7 @@ import { GetAllOptions } from "../types/event.type"
 
 
 // Create Event Service
-export async function createEventService(
+export async function createEvent(
   data: CreateEvent,
   hostId: string,
   featuredImage: Express.Multer.File | null,
@@ -98,7 +98,7 @@ export async function createEventService(
 
 
 // Update Event Service
-export async function updateEventService(
+export async function updateEvent(
   eventId: string,
   userId: string,
   data: CreateEvent,
@@ -198,7 +198,7 @@ export async function updateEventService(
 
 
 // Deleet Event Attachemnt Service
-export async function deleteEventAttachmentService(
+export async function deleteEventAttachment(
   attachmentId: string,
   userId: string
 ) {
@@ -238,7 +238,7 @@ export async function deleteEventAttachmentService(
 
 
 // Delete event service
-export async function deleteEventService(eventId: string, userId: string) {
+export async function deleteEvent(eventId: string, userId: string) {
 
   const existingEvent = await prisma.event.findUnique({
     where: { id: eventId },
@@ -262,7 +262,7 @@ export async function deleteEventService(eventId: string, userId: string) {
 
 
 // Get My Events Service
-export async function getMyEventsService(
+export async function getMyEvents(
   userId: string,
   options: GetAllOptions = {}
 ) {
@@ -288,8 +288,10 @@ export async function getMyEventsService(
       ...searchFilter,
     },
     include: {
-      hosts: { select: { id: true, role: true } },
+      hosts: true,
       attachments: { select: { id: true, fileUrl: true, fileType: true } },
+      participants: true
+
     },
     orderBy: { startTime: "desc" },
     skip,
@@ -312,7 +314,7 @@ export async function getMyEventsService(
 
 
 // Get All Events Service
-export async function getAllEventsService(options: GetAllOptions = {}) {
+export async function getAllEvents(options: GetAllOptions = {}) {
   const page = options.page && options.page > 0 ? options.page : 1;
   const limit = options.limit && options.limit > 0 ? options.limit : 6;
   const skip = (page - 1) * limit;
@@ -325,7 +327,7 @@ export async function getAllEventsService(options: GetAllOptions = {}) {
   // Total count of events
   const totalCount = await prisma.event.count({
     where: {
-      hosts: { some: { role: "ADMIN" } },
+      hosts: { some: { role: "ORGANIZER" } },
       ...searchFilter,
     },
   });
@@ -333,12 +335,13 @@ export async function getAllEventsService(options: GetAllOptions = {}) {
   // Fetch paginated events
   const events = await prisma.event.findMany({
     where: {
-      hosts: { some: { role: "ADMIN" } },
+      hosts: { some: { role: "ORGANIZER" } },
       ...searchFilter,
     },
     include: {
-      hosts: { select: { id: true, role: true } },
+      hosts: { select: { id: true, fullName: true, email: true, role: true } },
       attachments: { select: { id: true, fileUrl: true, fileType: true } },
+      participants: true
     },
     orderBy: { startTime: "desc" },
     skip,
@@ -361,12 +364,13 @@ export async function getAllEventsService(options: GetAllOptions = {}) {
 
 
 // Get event by id service
-export async function getEventByIdService(eventId: string) {
+export async function getEventById(eventId: string) {
   const event = await prisma.event.findUnique({
     where: { id: eventId },
     include: {
-      hosts: true,
+      hosts: { select: { id: true, fullName: true, email: true, role: true } },
       attachments: true,
+      participants:true
     },
   });
 
@@ -379,7 +383,7 @@ export async function getEventByIdService(eventId: string) {
 
 
 // Update Event Status Service
-export async function updateEventStatusService(
+export async function updateEventStatus(
   eventId: string,
   userId: string,
   status: "ACTIVE" | "ENDED" | "CANCELLED"

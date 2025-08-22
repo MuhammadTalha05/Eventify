@@ -5,23 +5,23 @@ import { requireAuth } from "../middlewares/auth.middleware";
 const router = Router();
  
 // SignUp and Verify Signup
-router.post("/signup", ctrl.signup);
+router.post("/signup", ctrl.signupController);
 // router.post("/signup/verify", ctrl.signupVerify);
 
 // Login 
-router.post("/signin", ctrl.signin);
-router.post("/login/verify", ctrl.verifyLogin);
+router.post("/signin", ctrl.signinController);
+router.post("/login/verify", ctrl.verifyLoginController);
 
 // Reset Password and Verify Password
-router.post("/password/reset", ctrl.resetPassword);
-router.post("/password/verify", ctrl.verifyReset);
+router.post("/password/reset", ctrl.resetPasswordController);
+router.post("/password/verify", ctrl.verifyResetController);
 
 
 // Refeshing Access Token With Refresh Token
-router.post("/token/refresh", ctrl.refreshAccessToken);
+router.post("/token/refresh", ctrl.refreshAccessTokenController);
 
 
 // Log Out With Access Token
-router.post("/logout", requireAuth, ctrl.logout);
+router.post("/logout", requireAuth, ctrl.logoutController);
 
 export default router;

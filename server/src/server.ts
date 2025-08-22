@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 import eventRoutes from "./routes/event.routes";
+import participantRoutes from "./routes/participant.routes";
 import errorHandler from "./middlewares/errorHandler.middleware";
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/event", eventRoutes);
+app.use("/api/participant", participantRoutes);
 
 // Unhandle Error
 app.use(errorHandler);
