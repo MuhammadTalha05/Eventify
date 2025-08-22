@@ -27,5 +27,5 @@ app.use("/api/participant", participantRoutes);
 app.use(errorHandler);
 
 // Server Listining
-const port = Number(process.env.PORT ?? 4000);
-app.listen(port, () => console.log(`Server listening on ${port}`));
+// const port = Number(process.env.PORT ?? 4000);
+// app.listen(port, () => console.log(`Server listening on ${port}`));
