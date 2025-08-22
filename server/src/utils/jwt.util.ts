@@ -12,6 +12,8 @@ const {
   JWT_REFRESH_SECRET,
   JWT_ACCESS_TTL,
   JWT_REFRESH_TTL,
+  JWT_RESET_PASSWORD_SECRET,
+  JWT_RESET_PASSWORD_TTL,
 } = process.env;
 
 if (!JWT_ACCESS_SECRET || !JWT_REFRESH_SECRET) {
@@ -20,6 +22,8 @@ if (!JWT_ACCESS_SECRET || !JWT_REFRESH_SECRET) {
 
 const accessSecret: Secret = JWT_ACCESS_SECRET;
 const refreshSecret: Secret = JWT_REFRESH_SECRET;
+const resetPasswordSecret: Secret = JWT_RESET_PASSWORD_SECRET || "dwerwerdsfsdfsdf@sdfsdfsdf";
+
 
 function parseExpiresIn(ttl: string | undefined, fallback: string): SignOptions["expiresIn"] {
   if (!ttl) return fallback as SignOptions["expiresIn"];
@@ -50,4 +54,16 @@ export function verifyAccessToken<T extends object = JwtPayload>(token: string):
 // Verify Refresh Token
 export function verifyRefreshToken<T extends object = JwtPayload>(token: string): T {
   return jwt.verify(token, refreshSecret) as T;
+}
+
+
+// Sign Password Reset Token
+export function signPasswordResetToken(payload: Record<string, unknown>) {
+  const options: SignOptions = { expiresIn: parseExpiresIn(JWT_RESET_PASSWORD_TTL, "15m") };
+  return jwt.sign(payload, resetPasswordSecret, options);
+}
+
+// Verify Password Reset Token
+export function verifyPasswordResetToken<T extends object = JwtPayload>(token: string): T {
+  return jwt.verify(token, resetPasswordSecret) as T;
 }

@@ -1,6 +1,3 @@
-
-
-
 // Validate email format
 export function isEmail(val: string | undefined): boolean {
   if (!val) return false;
@@ -30,7 +27,7 @@ export function isNonEmptyString(val: string | undefined): boolean {
 }
 
 
-// Validate phone number
+// Validate phone number (basic international format)
 export function isPhoneNumber(val: string | undefined): boolean {
   if (!val) return false;
   return /^(\+92\d{10}|03\d{9})$/.test(val);

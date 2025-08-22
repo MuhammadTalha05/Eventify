@@ -1,17 +1,17 @@
 -- CreateEnum
-CREATE TYPE "userRole" AS ENUM ('ADMIN', 'PARTICIPANT');
+CREATE TYPE "userRole" AS ENUM ('SUPER_ADMIN', 'ORGANIZER', 'PARTICIPANT');
 
 -- CreateEnum
 CREATE TYPE "eventType" AS ENUM ('ONSITE', 'ONLINE');
 
 -- CreateEnum
-CREATE TYPE "eventStatus" AS ENUM ('DRAFT', 'ACTIVE', 'ENDED', 'CANCELLED');
+CREATE TYPE "eventStatus" AS ENUM ('ACTIVE', 'ENDED', 'CANCELLED');
 
 -- CreateEnum
-CREATE TYPE "participantStatus" AS ENUM ('PENDING', 'CONFIRMED', 'REJECTED', 'CANCELLED');
+CREATE TYPE "otpPurpose" AS ENUM ('LOGIN');
 
 -- CreateEnum
-CREATE TYPE "otpPurpose" AS ENUM ('LOGIN', 'PASSWORD_RESET');
+CREATE TYPE "participantStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
 -- CreateTable
 CREATE TABLE "user" (
@@ -33,7 +33,6 @@ CREATE TABLE "event" (
     "id" TEXT NOT NULL,
     "title" VARCHAR(200) NOT NULL,
     "description" TEXT NOT NULL,
-    "hostId" TEXT NOT NULL,
     "totalSeats" INTEGER,
     "confirmedParticipants" INTEGER NOT NULL DEFAULT 0,
     "type" "eventType" NOT NULL,
@@ -41,9 +40,10 @@ CREATE TABLE "event" (
     "joinLink" TEXT,
     "startTime" TIMESTAMP(3) NOT NULL,
     "endTime" TIMESTAMP(3) NOT NULL,
+    "featuredImage" TEXT NOT NULL,
     "contactEmail" VARCHAR(255) NOT NULL,
-    "contactPhone" VARCHAR(20),
-    "status" "eventStatus" NOT NULL DEFAULT 'DRAFT',
+    "contactPhone" VARCHAR(20) NOT NULL,
+    "status" "eventStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -73,25 +73,6 @@ CREATE TABLE "eventParticipant" (
 );
 
 -- CreateTable
-CREATE TABLE "joiningCriteria" (
-    "id" TEXT NOT NULL,
-    "eventId" TEXT NOT NULL,
-    "questionText" TEXT NOT NULL,
-
-    CONSTRAINT "joiningCriteria_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "criteriaAnswer" (
-    "id" TEXT NOT NULL,
-    "criteriaId" TEXT NOT NULL,
-    "participantId" TEXT NOT NULL,
-    "answerText" TEXT NOT NULL,
-
-    CONSTRAINT "criteriaAnswer_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "otpRequest" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -116,6 +97,12 @@ CREATE TABLE "refreshToken" (
     CONSTRAINT "refreshToken_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "_EventHosts" (
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
 
@@ -125,11 +112,14 @@ CREATE UNIQUE INDEX "refreshToken_userId_key" ON "refreshToken"("userId");
 -- CreateIndex
 CREATE UNIQUE INDEX "refreshToken_token_key" ON "refreshToken"("token");
 
--- AddForeignKey
-ALTER TABLE "event" ADD CONSTRAINT "event_hostId_fkey" FOREIGN KEY ("hostId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "_EventHosts_AB_unique" ON "_EventHosts"("A", "B");
+
+-- CreateIndex
+CREATE INDEX "_EventHosts_B_index" ON "_EventHosts"("B");
 
 -- AddForeignKey
-ALTER TABLE "eventAttachment" ADD CONSTRAINT "eventAttachment_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "eventAttachment" ADD CONSTRAINT "eventAttachment_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "eventParticipant" ADD CONSTRAINT "eventParticipant_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -138,16 +128,13 @@ ALTER TABLE "eventParticipant" ADD CONSTRAINT "eventParticipant_eventId_fkey" FO
 ALTER TABLE "eventParticipant" ADD CONSTRAINT "eventParticipant_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "joiningCriteria" ADD CONSTRAINT "joiningCriteria_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "event"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "criteriaAnswer" ADD CONSTRAINT "criteriaAnswer_criteriaId_fkey" FOREIGN KEY ("criteriaId") REFERENCES "joiningCriteria"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "criteriaAnswer" ADD CONSTRAINT "criteriaAnswer_participantId_fkey" FOREIGN KEY ("participantId") REFERENCES "eventParticipant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "otpRequest" ADD CONSTRAINT "otpRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "refreshToken" ADD CONSTRAINT "refreshToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_EventHosts" ADD CONSTRAINT "_EventHosts_A_fkey" FOREIGN KEY ("A") REFERENCES "event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_EventHosts" ADD CONSTRAINT "_EventHosts_B_fkey" FOREIGN KEY ("B") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;

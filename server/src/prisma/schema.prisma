@@ -8,7 +8,8 @@ datasource db {
 }
 
 enum userRole {
-  ADMIN
+  SUPER_ADMIN
+  ORGANIZER
   PARTICIPANT
 }
 
@@ -18,22 +19,19 @@ enum eventType {
 }
 
 enum eventStatus {
-  DRAFT
   ACTIVE
   ENDED
   CANCELLED
 }
 
-enum participantStatus {
-  PENDING
-  CONFIRMED
-  REJECTED
-  CANCELLED
-}
-
 enum otpPurpose {
   LOGIN
-  PASSWORD_RESET
+}
+
+enum participantStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model user {
@@ -47,7 +45,7 @@ model user {
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
-  events        event[]           @relation("UserEvents")
+  hostedEvents  event[]           @relation("EventHosts")
   participants  eventParticipant[]
   otpRequests   otpRequest[]
   refreshToken  refreshToken?  @relation("UserRefreshTokens")
@@ -57,7 +55,6 @@ model event {
   id                     String             @id @default(uuid())
   title                  String             @db.VarChar(200)
   description            String
-  hostId                 String
   totalSeats             Int?
   confirmedParticipants  Int                @default(0)
   type                   eventType
@@ -65,16 +62,16 @@ model event {
   joinLink               String?
   startTime              DateTime
   endTime                DateTime
+  featuredImage          String
   contactEmail           String             @db.VarChar(255)
-  contactPhone           String?            @db.VarChar(20)
-  status                 eventStatus        @default(DRAFT)
+  contactPhone           String             @db.VarChar(20)
+  status                 eventStatus        @default(ACTIVE)
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
-  host                   user               @relation("UserEvents", fields: [hostId], references: [id])
+  hosts                  user[]             @relation("EventHosts")
   attachments            eventAttachment[]
   participants           eventParticipant[]
-  joiningCriteria        joiningCriteria[]
 }
 
 model eventAttachment {
@@ -84,7 +81,7 @@ model eventAttachment {
   fileType    String   @db.VarChar(50)
   uploadedAt  DateTime @default(now())
 
-  event event @relation(fields: [eventId], references: [id])
+  event event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
 
 model eventParticipant {
@@ -96,26 +93,6 @@ model eventParticipant {
 
   event   event @relation(fields: [eventId], references: [id])
   user    user  @relation(fields: [userId], references: [id])
-  answers criteriaAnswer[]
-}
-
-model joiningCriteria {
-  id            String   @id @default(uuid())
-  eventId       String
-  questionText  String
-
-  event   event            @relation(fields: [eventId], references: [id])
-  answers criteriaAnswer[]
-}
-
-model criteriaAnswer {
-  id             String   @id @default(uuid())
-  criteriaId     String
-  participantId  String
-  answerText     String
-
-  criteria    joiningCriteria  @relation(fields: [criteriaId], references: [id])
-  participant eventParticipant @relation(fields: [participantId], references: [id])
 }
 
 model otpRequest {
