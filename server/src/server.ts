@@ -23,9 +23,10 @@ app.use("/api/user", userRoutes);
 app.use("/api/event", eventRoutes);
 app.use("/api/participant", participantRoutes);
 
+// Health Check
+app.get("/health", (_req, res) => {
+  res.json({ ok: true, uptime: process.uptime() });
+});
+
 // Unhandle Error
 app.use(errorHandler);
-
-// Server Listining
-// const port = Number(process.env.PORT ?? 4000);
-// app.listen(port, () => console.log(`Server listening on ${port}`));

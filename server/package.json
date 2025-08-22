@@ -4,13 +4,15 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
-    "start": "npm run lint && npm run build && nodemon src/server.ts",
+    "dev": "npm run lint && npm run build && nodemon src/server.ts",
+    "start": "node dist/server.js",
     "build": "tsc",
     "lint": "eslint . --ext .ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:dev": "prisma migrate dev --name init",
+    "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio"
   },
   "keywords": [],
