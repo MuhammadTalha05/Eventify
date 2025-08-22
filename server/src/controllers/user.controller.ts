@@ -2,7 +2,7 @@ import { Response } from "express";
 import * as userService from "../services/user.service";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
-// Get profile (self or by id if admin)
+// Get profile (self or by id if ORGANIZER)
 export async function getProfileController(req: AuthRequest, res: Response) {
   try {
     if (!req.user) return res.status(401).json({success: false, error: "Unauthorized" });
@@ -14,7 +14,7 @@ export async function getProfileController(req: AuthRequest, res: Response) {
       return res.json(profile);
     }
 
-    if (id !== req.user.sub && req.user.role !== "ADMIN") {
+    if (id !== req.user.sub && req.user.role !== "ORGANIZER") {
       return res.status(403).json({success: false, error: "Forbidden: You can only view your own profile" });
     }
 
@@ -62,13 +62,13 @@ export async function updateProfileController(req: AuthRequest, res: Response) {
   }
 }
 
-// Admin: Get all users (excluding the requesting admin)
+// ORGANIZER: Get all users (excluding the requesting ORGANIZER)
 export async function getAllUsersController(req: AuthRequest, res: Response) {
   try {
-    if (!req.user || req.user.role !== "ADMIN") {
+    if (!req.user || req.user.role !== "ORGANIZER") {
       return res.status(403).json({
         success: false,
-        error: "Access denied. Only administrators can view all users.",
+        error: "Access denied. Only organizers can view all users.",
       });
     }
 
@@ -89,15 +89,15 @@ export async function getAllUsersController(req: AuthRequest, res: Response) {
   }
 }
 
-// Chnage User ROle
+// Chnage User Role
 export async function changeUserRoleController(req: AuthRequest, res: Response) {
   try {
     if (!req.user) return res.status(401).json({ error: "Unauthorized" });
 
-    if (req.user.role !== "ADMIN") {
+    if (req.user.role !== "ORGANIZER") {
       return res.status(403).json({ 
         success: false,
-        error: "Access denied. Only administrators can update user roles." 
+        error: "Access denied. Only organizers can update user roles." 
       });
     }
 
@@ -107,11 +107,11 @@ export async function changeUserRoleController(req: AuthRequest, res: Response) 
       return res.status(400).json({success: false, error: "id and role are required" });
     }
 
-    if (!["ADMIN", "PARTICIPANT"].includes(role)) {
-      return res.status(400).json({success: false, error: "Role must be either ADMIN or PARTICIPANT" });
+    if (!["ORGANIZER", "PARTICIPANT"].includes(role)) {
+      return res.status(400).json({success: false, error: "Role must be either ORGANIZER or PARTICIPANT" });
     }
 
-    const updatedUser = await userService.changeUserRole(id, role as "ADMIN" | "PARTICIPANT");
+    const updatedUser = await userService.changeUserRole(id, role as "ORGANIZER" | "PARTICIPANT");
     res.json({success: true, message: "Role updated successfully", user: updatedUser });
   } catch (err: unknown) {
     return res.status(400).json({

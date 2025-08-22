@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { createEventService, updateEventService, deleteEventService, getMyEventsService, getAllEventsService, getEventByIdService, deleteEventAttachmentService, updateEventStatusService } from "../services/event.service";
+import * as eventService from "../services/event.service";
 import { CreateEvent } from "../types/event.type";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
@@ -12,10 +12,10 @@ export async function createEventController(req: AuthRequest, res: Response) {
         message: "Unauthorized"
       });
     }
-    if (req.user.role !== "ADMIN") {
+    if (req.user.role !== "ORGANIZER") {
       return res.status(403).json({
         success: false,
-        message: "Forbidden: Only admins can create events"
+        message: "Forbidden: Only organizer can create events"
       });
     }
 
@@ -29,7 +29,7 @@ export async function createEventController(req: AuthRequest, res: Response) {
     const featuredImage = files?.featuredImage?.[0] ?? null;
     const attachments = files?.attachments ?? [];
 
-    const event = await createEventService(body, hostId, featuredImage, attachments);
+    const event = await eventService.createEvent(body, hostId, featuredImage, attachments);
 
     return res.status(201).json({
       success: true,
@@ -61,7 +61,7 @@ export async function updateEventController(req: AuthRequest, res: Response) {
     const featuredImage = files?.featuredImage?.[0] ?? null;
     const attachments = files?.attachments ?? [];
 
-    const event = await updateEventService(eventId, userId, req.body, featuredImage, attachments);
+    const event = await eventService.updateEvent(eventId, userId, req.body, featuredImage, attachments);
 
     return res.status(200).json({
       success: true,
@@ -87,7 +87,7 @@ export async function deleteEventAttachmentController(req: AuthRequest, res: Res
 
     if (!attachmentId) return res.status(400).json({ success: false, message: "Attachment ID is required" });
 
-    const result = await deleteEventAttachmentService(attachmentId, userId);
+    const result = await eventService.deleteEventAttachment(attachmentId, userId);
 
     return res.status(200).json({ ...result });
   } catch (err: unknown) {
@@ -113,7 +113,7 @@ export async function deleteEventController(req: AuthRequest, res: Response) {
     }
 
     // --- Call service ---
-    await deleteEventService(eventId, userId);
+    await eventService.deleteEvent(eventId, userId);
 
     return res.status(200).json({
       success: true,
@@ -141,7 +141,7 @@ export async function getMyEventsController(req: AuthRequest, res: Response) {
     const page = Number(req.query.page) || 1;
     const search = (req.query.search as string) || undefined;
 
-    const result = await getMyEventsService(userId, { page, search });
+    const result = await eventService.getMyEvents(userId, { page, search });
 
     return res.status(200).json({
       success: true,
@@ -162,7 +162,7 @@ export async function getAllEventsController(req: AuthRequest, res: Response) {
     const page = Number(req.query.page) || 1;
     const search = (req.query.search as string) || undefined;
 
-    const result = await getAllEventsService({ page, search });
+    const result = await eventService.getAllEvents({ page, search });
 
     return res.status(200).json({
       success: true,
@@ -186,7 +186,7 @@ export async function getEventByIdController(req: AuthRequest, res: Response) {
       return res.status(400).json({ success: false, message: "Event ID is required" });
     }
 
-    const event = await getEventByIdService(eventId);
+    const event = await eventService.getEventById(eventId);
 
     return res.status(200).json({
       success: true,
@@ -214,7 +214,7 @@ export async function updateEventStatusController(req: AuthRequest, res: Respons
       return res.status(400).json({ success: false, message: "Invalid Status" });
     }
 
-    const event = await updateEventStatusService(id, userId, status as "ACTIVE" | "ENDED" | "CANCELLED");
+    const event = await eventService.updateEventStatus(id, userId, status as "ACTIVE" | "ENDED" | "CANCELLED");
 
     return res.status(200).json({
       success: true,

@@ -4,7 +4,7 @@ import { AuthRequest } from "../middlewares/auth.middleware";
 
 
 // Signup Request Controller
-export async function signup(req: Request, res: Response) {
+export async function signupController(req: Request, res: Response) {
   try {
     const { fullName, email, phone, password, role  } = req.body;
 
@@ -24,7 +24,7 @@ export async function signup(req: Request, res: Response) {
 
 
 // Signin Controller
-export async function signin(req: AuthRequest, res: Response) {
+export async function signinController(req: AuthRequest, res: Response) {
   try {
    const { email, password } = req.body;
 
@@ -45,7 +45,7 @@ export async function signin(req: AuthRequest, res: Response) {
 }
 
 // Verfiy Login
-export async function verifyLogin(req: Request, res: Response) {
+export async function verifyLoginController(req: Request, res: Response) {
   try {
     const { email, otp } = req.body;
 
@@ -85,7 +85,7 @@ export async function verifyLogin(req: Request, res: Response) {
 
 
 // Request password reset (send email)
-export async function resetPassword(req: Request, res: Response) {
+export async function resetPasswordController(req: Request, res: Response) {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({success: false, error: "Email is required" });
@@ -102,7 +102,7 @@ export async function resetPassword(req: Request, res: Response) {
 
 
 // Verify reset token and set new password
-export async function verifyReset(req: Request, res: Response) {
+export async function verifyResetController(req: Request, res: Response) {
   try {
     const token = req.query.token as string;
     const { newPassword, confirmPassword } = req.body;
@@ -125,7 +125,7 @@ export async function verifyReset(req: Request, res: Response) {
 
 
 // Refreshing Access Token Controller
-export async function refreshAccessToken(req: Request, res: Response) {
+export async function refreshAccessTokenController(req: Request, res: Response) {
   try {
     const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) {
@@ -160,7 +160,7 @@ export async function refreshAccessToken(req: Request, res: Response) {
 
 
 // Logout Controller
-export async function logout(req: AuthRequest, res: Response) {
+export async function logoutController(req: AuthRequest, res: Response) {
   try {
     if (!req.user) return res.status(401).json({ error: "Unauthorized" });
 
